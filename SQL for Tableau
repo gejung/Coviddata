@@ -1,0 +1,59 @@
+--first part: SQL for infection and death rates in Tableau
+
+--Total new cases, new deaths, new death percentage around the globe
+Select SUM(new_cases) as total_cases, SUM(cast(new_deaths as int)) as total_deaths, SUM(cast(new_deaths as int))/SUM(New_Cases)*100 as DeathPercentage
+From coviddeaths
+where continent is not null 
+order by 1,2
+
+
+
+--Maximum infected and death counts/day by each continents
+SELECT continent,MAX(total_cases) AS highest_infection_count, 
+MAX(cast(total_deaths as int)) AS highest_death_count 
+FROM coviddeath WHERE continent is not null 
+GROUP BY continent 
+
+
+--Total cases and maximum infection rate per population sorted by each country
+SELECT country, SUM(total_cases) AS total_infection_cases,
+MAX((total_cases/population))*100 AS highest_infection_rate, population
+FROM coviddeath
+GROUP BY country, population
+
+
+--Total death cases and maximum death rate per population sorted by each country
+SELECT coviddeath.country, 
+SUM(cast(total_deaths as bigint)) AS total_death_cases,
+MAX(cast(total_deaths as bigint))/population *100 AS highest_death_rates, population
+FROM covidVaccinations 
+JOIN coviddeath
+ON coviddeath.country = covidVaccinations.country 
+GROUP BY coviddeath.country, population
+
+--Total new cases, new deaths, and death percentages per day around the globe
+SELECT date,SUM(new_cases) AS total_new_cases, 
+SUM(cast(new_deaths as int)) AS total_new_death, 
+SUM(cast(new_deaths as int))/SUM(new_cases)*100 AS death_percentage 
+FROM coviddeath WHERE continent is not null 
+GROUP BY date 
+ORDER BY 1,2
+
+--second part: SQL for vaccination rates in Tableau
+--Number of people getting vaccinated, fully_vaccinated, total boosters, total vaccinations in each day in each country
+
+SELECT coviddeath.country, coviddeath.date, 
+people_vaccinated, people_fully_vaccinated, total_boosters, total_vaccinations, population
+FROM covidVaccinations JOIN coviddeath 
+ON coviddeath.country = covidVaccinations.country AND coviddeath.date = covidVaccinations.date
+
+
+--SOMETHING IS WRONG! GETTING ERROR SIGN!!
+SELECT coviddeath.date, SUM((people_vaccinated/population))*100 AS percentage_of_vacc, 
+SUM((people_fully_vaccinated/population))*100 AS percentage_of_fully_vacc, 
+SUM((total_boosters/population))*100 AS total_percentage_of_booster, 
+SUM((total_vaccinations/population))*100 AS total_percentages_of_vaccination, population 
+FROM covidVaccinations JOIN coviddeath 
+ON coviddeath.date = covidVaccinations.date 
+WHERE coviddeath.continent is not null 
+GROUP BY coviddeath.date
